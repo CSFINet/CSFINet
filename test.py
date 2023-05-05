@@ -34,7 +34,7 @@ def test(cfg):
         num_workers=cfg["training"]["n_workers"]
     )
     
-    cfg["testing"]["trained_model"] = './trained/UNetDRNN_BrainWeb_2022_07_12_19_31_23.pkl'
+    cfg["testing"]["trained_model"] = './trained/UNetDRNN.pkl'
 
     model = get_model(cfg["model"], n_classes).to(device)
     state = convert_state_dict(torch.load(cfg["testing"]["trained_model"], map_location=device)["model_state"])
