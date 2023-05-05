@@ -15,7 +15,7 @@ class brainwebLoader(data.Dataset):
     """docstring for brainWebLoader"""
 
     def __init__(self, root, split="train"):
-        root = '/data/home/ywen/fy/RDC/datasets/brainweb/'
+        root = './datasets/brainweb/'
         self.root = root
         
         self.split = split
