@@ -16,7 +16,7 @@ class hyperLoader(data.Dataset):
     """docstring for hyperLoader"""
 
     def __init__(self, root, split="train"):
-        root = '/data/home/ywen/fy/RDC/datasets/hyper/'
+        root = './datasets/hyper/'
         self.root = root
         self.split = split
         self.n_classes = 2
