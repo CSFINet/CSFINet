@@ -11,7 +11,7 @@ loss/ : Some settings of the loss function
 
 configs/ : Selection of models and datasets
 
-dataset_down.text: You can choose from the download links we provide to download
+dataset_down.txt: You can choose from the download links we provide to download
 
 you can run the train.py and test.py for training and testing.
 
