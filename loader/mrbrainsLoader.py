@@ -13,7 +13,7 @@ from torchvision import transforms
 class mrbrainsLoader(data.Dataset):
 
     def __init__(self, root, split="train"):
-        root = '/data/home/ywen/fy/RDC/datasets/mrbrains/'
+        root = './datasets/mrbrains/'
         self.root = root
         self.split = split
         self.n_classes = 4
@@ -123,7 +123,7 @@ class mrbrainsLoader(data.Dataset):
 
 
 def debug_load():
-    root = '../RDC/datasets/mrbrains/'
+    root = './datasets/mrbrains/'
 
     t_loader = mrbrainsLoader(
         root,
