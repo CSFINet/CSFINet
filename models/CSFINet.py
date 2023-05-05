@@ -507,25 +507,22 @@ class PatchEmbed(nn.Module):
     def forward(self, x):
         _, _, H, W = x.shape
 
-        # padding
-        # 如果输入图片的H，W不是patch_size的整数倍，需要进行padding
+    
         pad_input = (H % self.patch_size[0] != 0) or (W % self.patch_size[1] != 0)
         if pad_input:
-            # to pad the last 3 dimensions,
-            # (W_left, W_right, H_top,H_bottom, C_front, C_back)
-            # 宽度方向的右侧 高度方向的底部 进行padding
+            
             x = F.pad(x, (0, self.patch_size[1] - W % self.patch_size[1],
                           0, self.patch_size[0] - H % self.patch_size[0],
                           0, 0))
 
-        # 下采样patch_size倍
+      
         x = self.proj(x)
         _, _, H, W = x.shape
         # flatten: [B, C, H, W] -> [B, C, HW]
         # transpose: [B, C, HW] -> [B, HW, C]
         x = x.flatten(2).transpose(1, 2)
         x = self.norm(x)
-        return x, H, W  # 通过下采样后的宽度和高度
+        return x, H, W  
 
 
 class PatchMerging(nn.Module):
@@ -553,27 +550,22 @@ class PatchMerging(nn.Module):
 
         x = x.view(B, hlong, wlong, C)
 
-        # padding
-        # 需要对特征图下采样两倍，如果输入feature map的H，W不是2的整数倍，需要进行padding
+      
         pad_input = (hlong % 2 == 1) or (wlong % 2 == 1)
         if pad_input:
-            # to pad the last 3 dimensions, starting from the last dimension and moving forward.
-            # (C_front, C_back, W_left, W_right, H_top, H_bottom)
-            # 注意这里的Tensor通道是[B, H, W, C]，所以会和官方文档有些不同
-            # 前两个代表channel方向，中间代表宽度方向，最后代表高度方向
-            # 代表在宽度方向的右侧，高度方向的下侧，从而保证是2的整数倍，然后可以下采样
+           
             x = F.pad(x, (0, 0, 0, wlong % 2, 0, hlong % 2))
 
-        x0 = x[:, 0::2, 0::2, :]  # [B, H/2, W/2, C]  蓝色的
-        x1 = x[:, 1::2, 0::2, :]  # [B, H/2, W/2, C]  绿色的
-        x2 = x[:, 0::2, 1::2, :]  # [B, H/2, W/2, C]  黄色的
-        x3 = x[:, 1::2, 1::2, :]  # [B, H/2, W/2, C]  红色的
-        # 在channel方向进行拼接
+        x0 = x[:, 0::2, 0::2, :]  # [B, H/2, W/2, C]  
+        x1 = x[:, 1::2, 0::2, :]  # [B, H/2, W/2, C]  
+        x2 = x[:, 0::2, 1::2, :]  # [B, H/2, W/2, C]  
+        x3 = x[:, 1::2, 1::2, :]  # [B, H/2, W/2, C]  
+      
         x = torch.cat([x0, x1, x2, x3], -1)  # [B, H/2, W/2, 4*C]
-        # 通过view方向在高宽的方向进行展平
+      
         x = x.view(B, -1, 4 * C)  # [B, H/2*W/2, 4*C]
         x = self.norm(x)
-        # 通过全连接层调整channel
+       
         x = self.reduction(x)  # [B, H/2*W/2, 2*C]
 
         return x
@@ -628,16 +620,16 @@ class WindowAttention(nn.Module):
         # define a parameter table of relative position bias
         self.relative_position_bias_table = nn.Parameter(
             torch.zeros((2 * window_size[0] - 1) * (2 * window_size[1] - 1), num_heads))  # [2*Mh-1 * 2*Mw-1, nH]
-        # 生成位置偏移表
+       
         # get pair-wise relative position index for each token inside the window
-        coords_h = torch.arange(self.window_size[0])  # 假设windows=2的话，coords_h=0,1, coords_w=0,1
+        coords_h = torch.arange(self.window_size[0]) 
         coords_w = torch.arange(self.window_size[1])
-        # meshgrid返回的是两个二tensor 通过stack方法进行拼接得到2
-        # coords = torch.stack(torch.meshgrid([coords_h, coords_w], indexing="ij"))  # [2, Mh, Mw]
+       
+       
         coords = torch.stack(torch.meshgrid([coords_h, coords_w]))  # [2, Mh, Mw]
         coords_flatten = torch.flatten(coords,
-                                       1)  # [2, Mh*Mw]  [[0,0,1,1],[0,1,0,1]]第一行表示的feature对应的行标，第二行对应的是feature对应的列表
-        # [2, Mh*Mw, 1] - [2, 1, Mh*Mw]
+                                       1)  
+       
         relative_coords = coords_flatten[:, :, None] - coords_flatten[:, None, :]  # [2, Mh*Mw, Mh*Mw]
         relative_coords = relative_coords.permute(1, 2, 0).contiguous()  # [Mh*Mw, Mh*Mw, 2]
         relative_coords[:, :, 0] += self.window_size[0] - 1  # shift to start from 0
@@ -667,7 +659,7 @@ class WindowAttention(nn.Module):
         # permute: -> [3, batch_size*num_windows, num_heads, Mh*Mw, embed_dim_per_head]
         qkv = self.qkv(x).reshape(B_, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         # [batch_size*num_windows, num_heads, Mh*Mw, embed_dim_per_head]
-        # 分别获得qkv
+    
         q, k, v = qkv.unbind(0)  # make torchscript happy (cannot use tensor as tuple)
 
         # transpose: -> [batch_size*num_windows, num_heads, embed_dim_per_head, Mh*Mw]
@@ -679,7 +671,7 @@ class WindowAttention(nn.Module):
         relative_position_bias = self.relative_position_bias_table[self.relative_position_index.view(-1)].view(
             self.window_size[0] * self.window_size[1], self.window_size[0] * self.window_size[1], -1)
         relative_position_bias = relative_position_bias.permute(2, 0, 1).contiguous()  # [nH, Mh*Mw, Mh*Mw]
-        attn = attn + relative_position_bias.unsqueeze(0)  # 加一个batch维度
+        attn = attn + relative_position_bias.unsqueeze(0) 
 
         if mask is not None:
             # mask: [nW, Mh*Mw, Mh*Mw]
@@ -946,7 +938,7 @@ class SwinTransformer(nn.Module):
             self.layers.append(layers)
 
         # self.norm = norm_layer(self.num_features)
-        # self.avgpool = nn.AdaptiveAvgPool1d(1)  # 自适应的全局平均池化，把最后一个维度变成1
+        # self.avgpool = nn.AdaptiveAvgPool1d(1)  
         # self.head = nn.Linear(self.num_features, num_classes) if num_classes > 0 else nn.Identity()
 
         self.apply(self._init_weights)

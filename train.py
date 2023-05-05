@@ -137,15 +137,14 @@ def train(cfg, logger):
     model = get_model(cfg["model"], n_classes).to(device)
     model = torch.nn.DataParallel(model, device_ids=[cfg["training"]["gpu_idx"]])
 
-    # Setup Optimizer, lr_scheduler and Loss Function
-    # 返回adam优化器
+    
     optimizer_cls = get_optimizer(cfg)
-    # 将学习率lr 和 weight_decay 写入到optimizer_params字典中
+
     optimizer_params = {k: v for k, v in cfg["training"]["optimizer"].items() if k != "name"}
 
     optimizer = optimizer_cls(model.parameters(), **optimizer_params)
     logger.info("Using optimizer {}".format(optimizer))
-    # 学习率的策略
+
     scheduler = get_scheduler(optimizer, cfg["training"]["lr_schedule"])
 
     loss_fn = get_loss_function(cfg)

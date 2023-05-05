@@ -83,7 +83,7 @@ class brainwebLoader(data.Dataset):
 
     def encode_segmap(self, mask):
         mask = mask.astype(np.uint8)
-        # 和mask 宽高一样
+
         label_mask = np.zeros((mask.shape[0], mask.shape[1]), dtype=np.uint8)
         for ii, label in enumerate(self.get_brainweb_colormap()):
             label_mask[np.where(np.all(mask == label, axis=-1))[:2]] = ii
