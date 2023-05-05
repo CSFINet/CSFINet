@@ -129,7 +129,7 @@ class brainwebLoader(data.Dataset):
 
 
 def debug_load():
-    root = '../RDC/datasets/brainweb/'
+    root = './datasets/brainweb/'
 
     t_loader = brainwebLoader(root)
 
