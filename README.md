@@ -1,4 +1,4 @@
-### CSFINet
+###  CSFINet
 This repository includes the official project of CSFINet, presented in our paper: CSFINet: Cross-scale Feature Interaction For Medical Image Segmentation
 ![alt](./imgs/model.png)
 
